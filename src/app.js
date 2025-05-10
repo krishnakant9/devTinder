@@ -3,14 +3,20 @@ const express = require("express");
 const app = express();
 
 //Request Handlers
-app.use("/home",(req,res)=>{
-    res.send("Hello from the server 123...");
+
+//This will handle only the GET call to /user
+app.get("/user",(req,res)=>{
+    res.send("firstName : Krishna \n lastName: kumar");
 });
+app.post("/user",(req,res)=>{
+    res.send("Data added successfully");
+});
+app.delete("/user",(req,res)=>{
+    res.send("Deleted Successfully");
+});
+
 app.use("/test",(req,res)=>{
     res.send("Hello from the test side");
-});
-app.use("/hello",(req,res)=>{
-    res.send("Hello Guys");
 });
 
 
