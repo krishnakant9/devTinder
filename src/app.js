@@ -7,6 +7,7 @@ const app = express();
 
 app.use(express.json());
 
+//Signup of a new user
 app.post("/signup",async(req,res)=>{
     //creating a new instance of the User Model
     const user = new User(req.body);
@@ -22,12 +23,11 @@ app.post("/signup",async(req,res)=>{
 app.get("/user",async(req,res)=>{
     const userEmail = req.body.email;
     try{
-
-    const users = await User.find({email:userEmail});
-    if(users.length === 0)
-        res.status(404).send("User Not Found");
-    else
-        res.send(users);
+        const users = await User.find({email:userEmail});
+        if(users.length === 0)
+            res.status(404).send("User Not Found");
+        else
+            res.send(users);
     }catch(err){
         res.status(400).send("something went Wrong" );
     }
@@ -58,17 +58,21 @@ app.delete("/user",async(req,res)=>{
 })
 
 //update data of user 
-app.patch("/user",async(req,res)=>{
-    
-    const emailId = req.body.email;
+app.patch("/user/:userId",async(req,res)=>{
+
+    const userId = req.params?.userId;
     const update = req.body;
     try{
-        const user = await User.findOneAndUpdate({email:emailId},update,{runValidators:true});
+        const AllowedUpdates = ["firstName","lastName","age","gender","photoUrl","about"];
+        const isUpdateAllowed = Object.keys(update).every((k)=>AllowedUpdates.includes(k));
+        if(!isUpdateAllowed)
+            throw new Error("Update not allowed");
+        const user = await User.findOneAndUpdate({_id:userId},update,{runValidators:true});
         res.send("User Upadted Successfully ");
     }catch(err){
         res.status(400).send("Something Went wrong!!!" + err.message);
     }
-})
+});
 
 dbConnect().
     then(()=>{
