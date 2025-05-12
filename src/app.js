@@ -1,78 +1,68 @@
 const express = require("express"); 
-const { adminAuth } = require("./middlewares/auth.js");
 const {userAuth} = require("./middlewares/auth.js");
 const dbConnect = require("./config/database.js");
 const User = require("./models/user.js"); // importing UserModels
+const userValidation = require("./utils/validation.js");
+const bcrypt = require("bcrypt");
+const cookieparser = require("cookie-parser");
+const jwt = require("jsonwebtoken");
 const app = express();
-
 app.use(express.json());
+app.use(cookieparser());
 
 //Signup of a new user
 app.post("/signup",async(req,res)=>{
-    //creating a new instance of the User Model
-    const user = new User(req.body);
     try{
+        //validating a user
+        userValidation(req);
+
+        const{firstName,lastName,email,password} = req.body;
+
+        //encypting the password
+        const passhash = await bcrypt.hash(password,10);
+
+        //creating a new instance of the User Model
+        const user = new User({firstName,lastName,email,password:passhash});
         await user.save();
         res.send("User Added Successfully");
     }catch(err){
-        res.status(400).send("Error Adding User"+ ":"+ err.message);
+        res.status(400).send("ERROR : "+ err.message);
     }
 });
 
-//getUser api 
-app.get("/user",async(req,res)=>{
-    const userEmail = req.body.email;
+//Login APi
+app.post("/login",async(req,res)=>{
     try{
-        const users = await User.find({email:userEmail});
-        if(users.length === 0)
-            res.status(404).send("User Not Found");
-        else
-            res.send(users);
+        const {email,password} = req.body;
+        //Email and Password Validation
+        const user = await User.findOne({email:email});
+        if(!user)
+            throw new Error("Invalid Email");
+        const passValid = await user.validatePassword(password);
+        if(!passValid)
+                throw new Error("Inavlid Password");
+        
+        //Token Generation
+        const token = await user.generateJWT();
+        //Storing the token in cookie
+        res.cookie("token",token,{expires:new Date(Date.now() + 7*24*60*60*1000),});
+
+        res.send("User Login SuccessFul");
     }catch(err){
-        res.status(400).send("something went Wrong" );
+    res.status(400).send("ERROR : "+ err.message);
     }
 })
 
-//getting multiple user -> creating feed
-app.get("/feed",async(req,res)=>{
+//profile API
+app.get("/profile",userAuth,async(req,res)=>{
     try{
-        const feed = await User.find({});
-        if(feed.length === 0)
-            res.status(404).send("No User Found");
-        else
-            res.send(feed);
+        const user = req.user;
+        res.send(user);
     }catch(err){
-        res.status(400).send("something went Wrong");
+        res.status(400).send("ERROR : "+ err.message);
     }
 });
 
-//delete a user
-app.delete("/user",async(req,res)=>{
-    const userId = req.body._id;
-    try{
-        const user = await User.findOneAndDelete(userId);
-        res.send("User Deleted Successfully");
-    }catch(err){
-        res.status(400).send("Something Went Wrong");
-    }
-})
-
-//update data of user 
-app.patch("/user/:userId",async(req,res)=>{
-
-    const userId = req.params?.userId;
-    const update = req.body;
-    try{
-        const AllowedUpdates = ["firstName","lastName","age","gender","photoUrl","about"];
-        const isUpdateAllowed = Object.keys(update).every((k)=>AllowedUpdates.includes(k));
-        if(!isUpdateAllowed)
-            throw new Error("Update not allowed");
-        const user = await User.findOneAndUpdate({_id:userId},update,{runValidators:true});
-        res.send("User Upadted Successfully ");
-    }catch(err){
-        res.status(400).send("Something Went wrong!!!" + err.message);
-    }
-});
 
 dbConnect().
     then(()=>{
