@@ -14,54 +14,24 @@ app.post("/signup",async(req,res)=>{
         await user.save();
         res.send("User Added Successfully");
     }catch(err){
-        res.status(400).send("Error Adding User");
+        res.status(400).send("Error Adding User"+ err.message);
     }
 });
 
 //getUser api 
-// app.get("/user",async(req,res)=>{
-//     const userEmail = req.body.email;
-//     try{
+app.get("/user",async(req,res)=>{
+    const userEmail = req.body.email;
+    try{
 
-//     const users = await User.find({email:userEmail});
-//     if(users.length === 0)
-//         res.status(404).send("User Not Found");
-//     else
-//         res.send(users);
-//     }catch(err){
-//         res.status(400).send("something went Wrong");
-//     }
-// })
-
-//getUser api using findOne
-// app.get("/user",async(req,res)=>{
-//     const userEmail = req.body.email;
-//     try{
-//         const users = await User.findOne({email : userEmail});
-//          if(users.length === 0)
-//              res.status(404).send("User Not Found");
-//          else
-//              res.send(users);
-//     }catch(err){
-//         res.status(400).send("something went Wrong");
-//     }
-// });
-
-//get element using findById
-// app.get("/user",async(req,res) => {
-//     const userId = req.body._id?.$oid;
-//     console.log(userId);
-//     try{
-//         const user = await User.findById(userId);
-//         if(user.length === 0)
-//             res.send("NO user Exist With This Id");
-//         else
-//             res.send(user);
-//     }catch(err){
-//         res.status(400).send("Something went wrong");
-//     }
-// })
-
+    const users = await User.find({email:userEmail});
+    if(users.length === 0)
+        res.status(404).send("User Not Found");
+    else
+        res.send(users);
+    }catch(err){
+        res.status(400).send("something went Wrong" );
+    }
+})
 
 //getting multiple user -> creating feed
 app.get("/feed",async(req,res)=>{
@@ -74,7 +44,32 @@ app.get("/feed",async(req,res)=>{
     }catch(err){
         res.status(400).send("something went Wrong");
     }
+});
+
+//delete a user
+app.delete("/user",async(req,res)=>{
+    const userId = req.body._id;
+    try{
+        const user = await User.findOneAndDelete(userId);
+        res.send("User Deleted Successfully");
+    }catch(err){
+        res.status(400).send("Something Went Wrong");
+    }
 })
+
+//update data of user 
+app.patch("/user",async(req,res)=>{
+    
+    const emailId = req.body.email;
+    const update = req.body;
+    try{
+        const user = await User.findOneAndUpdate({email:emailId},update,{runValidators:true});
+        res.send("User Upadted Successfully ");
+    }catch(err){
+        res.status(400).send("Something Went wrong!!!" + err.message);
+    }
+})
+
 dbConnect().
     then(()=>{
         console.log("COnnected to Database Successfully");
