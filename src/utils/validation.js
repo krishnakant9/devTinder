@@ -13,5 +13,10 @@ const userValidation=(req)=>{
         return true;
     }
 }
+const validateEdit = (req)=>{
+    const allowedEdit = ["firstName","lastName","age","gender","skills","about"];
+    const isUpdateAllowed = Object.keys(req.body).every((field) => allowedEdit.includes(field));
+    return isUpdateAllowed;
+}
 
-module.exports = userValidation;
+module.exports = {userValidation,validateEdit};

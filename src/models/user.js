@@ -66,7 +66,7 @@ const userSchema = mongoose.Schema({
     about : {
         type : String,
         default : "This is the default generated Bio of the user",
-        maxlength : 200,
+        maxlength : [200,"Please write your about section within the word limit of 200"]
     },
     skills : {
         type :Array,

@@ -1,8 +1,9 @@
 const jwt = require("jsonwebtoken");
 const User = require("../models/user");
 
+
 const userAuth = async(req,res,next)=>{
-    const {token} = req.cookies;
+    const token = req.cookies.token;
     if(!token){
         return res.status(400).send("Please Login Again");
     }
