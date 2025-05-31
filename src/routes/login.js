@@ -17,8 +17,13 @@ loginRouter.post("/signup",async(req,res)=>{
 
         //creating a new instance of the User Model
         const user = new User({firstName,lastName,email,password:passhash});
-        await user.save();
-        res.send("User Added Successfully");
+        const savedUser = await user.save();
+        //Token Generation
+        const token = await savedUser.generateJWT();
+        //Storing the token in cookie
+        res.cookie("token", token, { expires: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), });
+        console.log(savedUser.data);
+        res.json(savedUser);
     }catch(err){
         res.status(400).send("ERROR : "+ err.message);
     }
@@ -41,7 +46,7 @@ loginRouter.post("/login",async(req,res)=>{
         //Storing the token in cookie
         res.cookie("token",token,{expires:new Date(Date.now() + 7*24*60*60*1000),});
 
-        res.send("User Login SuccessFul");
+        res.send(user);
     }catch(err){
     res.status(400).send("ERROR : "+ err.message);
     }

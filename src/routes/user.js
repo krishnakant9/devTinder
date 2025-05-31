@@ -4,15 +4,19 @@ const ConnectionRequestModel = require("../models/connectionRequest");
 const { connection } = require("mongoose");
 const userRouter = express.Router();
 const User = require("../models/user");
+
+const USER_DATA = ["firstName", "lastName", "age", "gender", "about", "skills", "photoUrl"];
+
+//SHOW RECEIVED REQUEST
 userRouter.get("/user/requests/received",userAuth,async(req,res)=>{
     try{
         const loggedInUser = req.user;
         const connectionRequest = await ConnectionRequestModel.find({
             $and:[{toUserId : loggedInUser._id},{status : "interested"}]
-        }).populate("fromUserId","firstName lastName age gender about skills");
+        }).populate("fromUserId",USER_DATA);
 
         if(connectionRequest.length === 0){
-            res.status(400).send("You have no pending connection request")
+            return res.status(200).send([]);
         }
         res.send(connectionRequest);
 
@@ -21,20 +25,20 @@ userRouter.get("/user/requests/received",userAuth,async(req,res)=>{
     }
 });
 
-const USER_DATA =["firstName" ,"lastName", "age", "gender" ,"about" ,"skills"];
 
+//SHOW ALL CONNECTION
 userRouter.get("/user/connection",userAuth,async(req,res)=>{
     try{
         const user = req.user;
         const connectionRequest = await ConnectionRequestModel.find({
             $or:[{fromUserId : user._id,status :"accepted"},{toUserId : user._id,status :"accepted"}]
-        }).populate("fromUserId",USER_DATA).populate("toUserId",USER_DATA);
-        if(connectionRequest.length === 0){
-            res.status(400).send("You have no connections");
-        }
+        }).populate("fromUserId", USER_DATA).populate("toUserId", USER_DATA);
 
+        if(connectionRequest.length === 0){
+            return res.status(200).send([]);
+        }
         const data = connectionRequest.map((request)=>{
-            if(request.fromUserId._id.toString() === user._id.toString()){
+            if(request.fromUserId._id.equals(user._id)){
                 return request.toUserId;
             }
             return request.fromUserId
@@ -47,6 +51,8 @@ userRouter.get("/user/connection",userAuth,async(req,res)=>{
 
 });
 
+
+//MAIN FEED PAGE
 userRouter.get("/user/feed",userAuth,async(req,res)=>{
     try{
         const page = (req.query.page) || 1 ;

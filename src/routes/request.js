@@ -17,7 +17,7 @@ requestRouter.post("/request/send/:status/:toUserId",userAuth,async(req,res)=>{
 
         const allowedStatus = ["interested" , "ignored"];
         const isStatusValid = allowedStatus.includes(status);
-        console.log(isStatusValid);
+       
         if(!isStatusValid){
             return res.status(400).send("Invalid Status");
         }
@@ -51,7 +51,6 @@ requestRouter.post("/request/review/:status/:requestId",userAuth,async(req,res)=
         }
         
         const requestValid = await ConnectionRequestModel.findById(requestId);
-        console.log(requestValid);
         if(!requestValid){
             return res.status(400).send("Invalid request ID : Connection request does not exist")
         }
