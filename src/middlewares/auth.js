@@ -8,7 +8,7 @@ const userAuth = async(req,res,next)=>{
         return res.status(401).send("Please Login Again");
     }
     try{
-        const _id = jwt.verify(token,"DevTinder@2003");
+        const _id = jwt.verify(token,process.env.JWT_SECRET);
         const user = await User.findById(_id);
         if(!user)
             
