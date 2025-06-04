@@ -5,7 +5,7 @@ app.use(express.json());
 const cookieparser = require("cookie-parser");
 const cors = require('cors')
 require("dotenv").config();
-
+require("./utils/cronjob.js");
 app.use(cors({
     origin: "http://localhost:5173",
     credentials:true 
